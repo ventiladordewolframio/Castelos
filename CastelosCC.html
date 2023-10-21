@@ -1,0 +1,327 @@
+<!--by: Jacaré_de_Bota/W74-2023-->
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+    </head>
+    <body>
+        <h2>VERIFICAR FOGO</h2>
+        <input type="number" placeholder="Velocidade Inicial" id="textbox1">
+        <input type="number" placeholder="Ângulo Inicial" id="textbox2">
+        <button onclick="HTMLFire()">Executar</button>
+        <br>
+        <b id="HTMLFire"></b>
+        <br>
+        <br>
+        <h2>CALCULAR TIROS</h2>
+        <label for="seucastelo">SEU CASTELO:</label>
+        <select id="seucastelo" name="seucastelo" placeholder="C5">
+            <option value="1">C1</option>
+            <option value="2">C2</option>
+            <option value="3">C3</option>
+            <option value="4">C4</option>
+            <option value="5">C5</option>
+            <option value="6">C6</option>
+            <option value="7">C7</option>
+            <option value="8">C8</option>
+            <option value="9">C9</option>
+            <option value="10">C10</option>
+        </select>
+        <label for="casteloinimigo">CASTELO INIMIGO:</label>
+        <select id="casteloinimigo" name="casteloinimigo">
+            <option value="1">C1</option>
+            <option value="2" selected="selected">C2</option>
+            <option value="3">C3</option>
+            <option value="4">C4</option>
+            <option value="5">C5</option>
+            <option value="6">C6</option>
+            <option value="7">C7</option>
+            <option value="8">C8</option>
+            <option value="9">C9</option>
+            <option value="10">C10</option>
+        </select>
+        <button onclick="HTMLGetAllHits()">CALCULAR TODOS</button>
+        <button onclick="HTMLGetAllValues()">CALCULAR MELHORES</button>
+        <button onclick="HTMLExcel()">CALCULAR TODAS COMBINAÇÕES</button>
+        <br>
+        <p id="HTMLGetAllHits"></p>
+
+    </body>
+    <script>
+
+// CONSTANTS
+const Cy = [
+    200, 100, 50, 10, 80, 150, 40, 30, 90, 60
+]
+const Cx = {
+    1: [0, 230, 270, 300, 390, 160, 340, 230, 340, 400],
+    2: [230, 0, 390, 170, 410, 380, 300, 270, 510, 495],
+    3: [270, 390, 0, 315, 170, 230, 225, 140, 140, 130],
+    4: [300, 170, 315, 0, 270, 410, 145, 180, 450, 390],
+    5: [390, 410, 170, 270, 0, 400, 130, 165, 280, 140],
+    6: [160, 380, 230, 410, 400, 0, 400, 280, 230, 350],
+    7: [340, 300, 225, 145, 130, 400, 0, 120, 360, 260],
+    8: [230, 270, 140, 180, 165, 280, 120, 0, 270, 230],
+    9: [340, 510, 140, 450, 280, 230, 360, 270, 0, 170],
+    10: [400, 495, 130, 390, 140, 350, 260, 230, 170, 0]
+}
+const g = 9.8
+const v0Max = 100
+const C2Length = 40
+const C2HalfLength = C2Length / 2
+const MinEnterHeight = 5
+const BinarySearchSteps = 23
+
+// FUNCTIONS
+function traj(x, y0, v0, oDeg) {
+    let oRad = oDeg * (Math.PI / 180)
+    let vx = v0 * Math.cos(oRad);
+    let y = y0 + ((v0 * Math.sin(oRad) * x) / (vx)) - ((g * x ** 2) / (vx ** 2 * 2))
+
+    //console.log("traj(x) traj("+x+","+y0+","+v0+","+oDeg+")\nx = "+x+"\ny = "+y)
+
+    return y
+}
+
+function GetCValues(C1, C2) {
+    let C2xCenter = Cx[C1][C2 - 1]
+    let C2xMin = C2xCenter - C2HalfLength
+    let C2xMax = C2xCenter + C2HalfLength
+    let C2y = Cy[C2 - 1]
+    let C1y = Cy[C1 - 1]
+    return [C2xCenter, C2xMin, C2xMax, C2y, C1y]
+}
+
+function Fire(C1, C2, v0, oDeg) {
+    let C2xCenter = Cx[C1][C2 - 1]
+    let C2xMin = C2xCenter - C2HalfLength
+    let C2xMax = C2xCenter + C2HalfLength
+    let C2y = Cy[C2 - 1]
+    let C1y = Cy[C1 - 1]
+
+    //valor y da trajetória no começo e no fim do território do C2
+    let y1 = traj(C2xMin, C1y, v0, oDeg)
+    let y2 = traj(C2xMax, C1y, v0, oDeg)
+
+    //console.log("traj(x) Fire("+C2xMin+","+v0+","+oDeg+")\nC2xMin = "+C2xMin+"\ny1 = "+y1+"\nC2xMax = "+C2xMax+"\ny2 = "+y2)
+
+    if (y1 < C2y || y2 > C2y) { return false }
+    return true
+}
+
+function GetAllHits(C1, C2) {
+    let startTime = performance.now()
+
+    let Resultv0 = []
+    let Resulto = []
+
+    //salva os valores iniciais para cada tiro que acerte
+    for (let i = 1; i < 89; i++) {
+        for (let j = 1; j < v0Max; j++) {
+            if (Fire(C1, C2, j, i)) {
+                Resultv0.push(j)
+                Resulto.push(i)
+            }
+        }
+    }
+
+    let endTime = performance.now()
+    let totaltime = Math.round((endTime - startTime) * 100) / 100
+
+    //console.log(`GetAllHits() took ${Math.round((endTime - startTime) * 100) / 100} ms`)
+
+    return [Resultv0, Resulto, totaltime]
+}
+
+function BinarySearchHitxValue(C1, C2, v0, oDeg) {
+    let CValues = GetCValues(C1, C2)
+    let C2xMin = CValues[1]
+
+    //faz a primeira divisão do castelo e calcula o sey valor y
+    //é a razão que l começa no 2 e o BinarySearchSteps+2 já que a primeira ja foi
+    C2xMin = C2xMin + C2Length / 2
+    let y = traj(C2xMin, CValues[4], v0, oDeg)
+
+    //para cada um da quantidade de divisões ao meio
+    for (let l = 2; l < BinarySearchSteps + 2; l++) {
+        //se a intersecção com o C2 estiver para a direita
+        if (y > CValues[3]) {
+            C2xMin = C2xMin + C2Length / 2 ** l
+            y = traj(C2xMin, CValues[4], v0, oDeg)
+            continue
+        }
+        //se a intersecção com o C2 estiver para a esquerda
+        if (y < CValues[3]) {
+            C2xMin = C2xMin - C2Length / 2 ** l
+            y = traj(C2xMin, CValues[4], v0, oDeg)
+            continue
+        }
+        //se a intersecção com o C2 estiver exatamente nessa posição
+        if (y === CValues[3]) {
+            return C2xMin
+        }
+    }
+    //ao final da quantidade especificada de BinarySearchSteps retorne o valor que foi estimado
+    return C2xMin
+}
+
+function GetAllValues(C1, C2) {
+    let startTime = performance.now()
+
+    let v0Total = []
+    let oTotal = []
+    let PrecisionTotal = []
+    let EnterHeightTotal = []
+    let ScoreTotal = []
+
+    let CValues = GetCValues(C1, C2)
+
+    //se o tiro realmente acerta o castelo entao ele salva todas as informações dele necessárias
+    for (let i = 1; i < 89; i++) {
+        for (let j = 1; j < v0Max; j++) {
+            if (Fire(C1, C2, j, i)) {
+                v0Total.push(j)
+                oTotal.push(i)
+                EnterHeightTotal.push(traj(CValues[1], CValues[4], j, i) - CValues[3])
+                PrecisionTotal.push(Math.abs(CValues[0] - BinarySearchHitxValue(C1, C2, j, i)))
+            }
+        }
+    }
+
+    //calcula a precisao de cada tiro com base nos valores obtidos e salva
+    for (let f = 0; f < PrecisionTotal.length; f++) {
+        let result = 0
+        let Precision = (20 - PrecisionTotal[f]) * 2.5
+        let EnterHeight = 0
+        if (EnterHeightTotal[f] > 5) {
+            EnterHeight = 50
+        } else {
+            EnterHeight = EnterHeightTotal[f] * 10
+        }
+        result = Precision + EnterHeight
+        ScoreTotal.push(result)
+    }
+
+    let endTime = performance.now()
+    let totaltime = Math.round((endTime - startTime) * 100) / 100
+    //console.log(`GetAllValues() took ${Math.round((endTime - startTime) * 100) / 100} ms`)
+
+    return [v0Total, oTotal, PrecisionTotal, EnterHeightTotal, ScoreTotal, totaltime]
+}
+
+function GetBestScoreCombination(v0Total, oTotal, ScoreTotal) {
+    for (let j = 0; j < 5; j++) {
+        for (let t = 0; t < 100; t++) {
+            let VoList = []
+            let AList = []
+            let ScoreList = []
+            let LastNum = -10
+            let ResultA = []
+            let ResultVo = []
+
+            //Avalia todos os scores
+            for (let i = 0; i < ScoreTotal.length; i++) {
+                //Apenas salva os scores que estao dentro do minimo
+                if (ScoreTotal[i] > 100 - t) {
+                    VoList.push(v0Total[i])
+                    AList.push(oTotal[i])
+                    ScoreList.push(ScoreTotal[i])
+                }
+            }
+
+            //Coloca emm ordem a quantidade maxima de tiros com 10 graus de diferenca
+            for (let l = 0; l < AList.length; l++) {
+                if (AList[l] >= LastNum + 10) {
+                    LastNum = AList[l]
+                    ResultA.push(AList[l])
+                    ResultVo.push(VoList[l])
+                }
+            }
+
+            //Se maior ou igual a 5 a quantidade de tiros termina o codigo
+            if (ResultA.length >= 5 - j) {
+                return [ResultVo, ResultA]
+            }
+        }
+    }
+}
+
+function Excel() {
+    let startTime = performance.now()
+
+    let CQuantity = Object.keys(Cx).length
+    let ExcelContend = {}
+
+    for (let c = 1; c < CQuantity + 1; c++) {
+        Object.assign(ExcelContend, { [c]: []});
+    }
+
+    for (let i = 1; i < CQuantity + 1; i++) {
+        for (let j = 1; j < CQuantity + 2; j++) {
+            if (i === j) { continue }
+            let AllValues = GetAllValues(i, j)
+            //console.log("\n" + "i = " + i + " j = " + j)
+            Object.assign(ExcelContend[i], { [j]: GetBestScoreCombination(AllValues[0], AllValues[1], AllValues[4]) })
+        }
+    }
+
+    let endTime = performance.now()
+    let totaltime = Math.round((endTime - startTime) * 100) / 100
+    let mediumtime = Math.round((endTime - startTime) / (CQuantity * (CQuantity - 1)) * 100) / 100
+
+    console.log(ExcelContend)
+    console.log(`EXCEL() took: \n├─time = ${totaltime} ms \n└─medium = ${mediumtime} ms/op`)
+
+    return [ExcelContend, totaltime, mediumtime]
+}
+
+//HTML FUNCTIONS
+function HTMLFire() {
+    var seucastelo = document.getElementById("seucastelo");
+    var casteloinimigo = document.getElementById("casteloinimigo");
+    var textbox1 = document.getElementById("textbox1");
+    var textbox2 = document.getElementById("textbox2");
+    document.getElementById("HTMLFire").innerHTML = Fire(seucastelo.value, casteloinimigo.value, textbox1.value, textbox2.value)
+}
+
+function HTMLGetAllHits() {
+    var seucastelo = document.getElementById("seucastelo");
+    var casteloinimigo = document.getElementById("casteloinimigo");
+    let result = GetAllHits(seucastelo.value, casteloinimigo.value)
+    let frontmatter = `<b>GetAllHits() took:</b><br>└─total = ${result[2]}ms<br><br>`
+    let resultarr = ""
+    for (let i = 0; i < result[0].length; i++) {
+        resultarr = resultarr + `Tiro (${i + 1}/${result[0].length})<br>└─(v0 = ${result[0][i]} , o = ${result[1][i]})<br>`
+    }
+    document.getElementById("HTMLGetAllHits").innerHTML = frontmatter + "v0<br>└─" + result[0] + "<br>" + " o<br>└─" + result[1] + "<br><br>" + resultarr;
+}
+
+function HTMLGetAllValues() {
+    var seucastelo = document.getElementById("seucastelo");
+    var casteloinimigo = document.getElementById("casteloinimigo");
+    let AllValues = GetAllValues(seucastelo.value, casteloinimigo.value)
+    let result = GetBestScoreCombination(AllValues[0], AllValues[1], AllValues[4])
+    let frontmatter = `<b>GetAllValues() took:</b><br>└─total = ${AllValues[5]}ms<br><br>`
+    let resultarr = ""
+    for (let i = 0; i < result[0].length; i++) {
+        resultarr = resultarr + `Tiro (${i + 1}/${result[0].length})<br>└─(v0 = ${result[0][i]} , o = ${result[1][i]})<br>`
+    }
+    document.getElementById("HTMLGetAllHits").innerHTML = frontmatter + "v0<br>└─" + result[0] + "<br>" + " o<br>└─" + result[1] + "<br><br>" + resultarr;
+}
+
+function HTMLExcel() {
+    let result = Excel()
+    let resultarr = `<b>Excel() took:</b><br>├─total = ${result[1]}ms<br>└─medium = ${result[2]}ms/op<br><br>`
+    for (let i = 1; i < Object.keys(result[0]).length + 1; i++) {
+        for (let j = 1; j < Object.keys(result[0][i]).length + 1; j++) {
+            if (i === j) { continue }//!better...
+            resultarr = resultarr + `C${i}xC${j}<br>` + "├─v0 = " + result[0][i][j][0] + "<br>└─o = " + result[0][i][j][1] + "<br>"
+
+        }
+
+    }
+    document.getElementById("HTMLGetAllHits").innerHTML = resultarr
+}
+
+    </script>
+</html>
