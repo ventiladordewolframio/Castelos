@@ -31,10 +31,10 @@ TL;DR: esse programa apresenta as mesmas respostas do geogebra em velocidades re
 
 ### Funcionamento
 
-Após escoler o "SEU CASTELO" e o "CASTELO INIMIGO" é possivel:
+Após escolher o "SEU CASTELO" e o "CASTELO INIMIGO" é possivel:
 - verificar o fogo de qualquer combinação de velocidade inicial e ângulo
 - calcular todos os tiros que acertam
 - calcular os melhores desses tiros
-- calcular os melhores tiros de todos os castelos contra todos os castelos
+- calcular os melhores tiros de todos os castelos contra todos os castelos 
 
 "si vis pacem, para bellum" - batmão
